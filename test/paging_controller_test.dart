@@ -219,7 +219,8 @@ void main() {
     test('Can\'t add a [PageRequestListener] to a disposed [PagingController]',
         () {
       expect(
-        () => disposedPagingController.addPageRequestListener((pageKey) {}),
+        () =>
+            disposedPagingController.addPageRequestListener((pageKey) async {}),
         throwsException,
       );
     });
@@ -236,7 +237,8 @@ void main() {
         'Can\'t remove a [PageRequestListener] from a disposed '
         '[PagingController]', () {
       expect(
-        () => disposedPagingController.removePageRequestListener((pageKey) {}),
+        () => disposedPagingController
+            .removePageRequestListener((pageKey) async {}),
         throwsException,
       );
     });
@@ -311,5 +313,5 @@ class MockStatusListener extends Mock {
 }
 
 class MockPageRequestListener<PageKeyType> extends Mock {
-  void call(PageKeyType pageKey);
+  Future<void> call(PageKeyType pageKey);
 }

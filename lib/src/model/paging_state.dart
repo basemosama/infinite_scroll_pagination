@@ -3,12 +3,13 @@ import 'package:infinite_scroll_pagination/src/model/paging_status.dart';
 
 /// The current item's list, error, and next page key state for a paginated
 /// widget.
-@immutable
 class PagingState<PageKeyType, ItemType> {
+  final int version;
   const PagingState({
     this.nextPageKey,
     this.itemList,
     this.error,
+    this.version = 0,
   });
 
   /// List with all items loaded so far.
@@ -56,6 +57,7 @@ class PagingState<PageKeyType, ItemType> {
       return true;
     }
     return other is PagingState &&
+        other.version == version &&
         other.itemList == itemList &&
         other.error == error &&
         other.nextPageKey == nextPageKey;
@@ -63,6 +65,7 @@ class PagingState<PageKeyType, ItemType> {
 
   @override
   int get hashCode => Object.hash(
+        version.hashCode,
         itemList.hashCode,
         error.hashCode,
         nextPageKey.hashCode,
