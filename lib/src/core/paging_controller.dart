@@ -1,11 +1,13 @@
+import 'dart:async';
+
+import 'package:async/async.dart';
 import 'package:flutter/foundation.dart';
 import 'package:infinite_scroll_pagination/src/model/paging_state.dart';
 import 'package:infinite_scroll_pagination/src/model/paging_status.dart';
 
-typedef PageRequestListener<PageKeyType> = void Function(
+typedef PageRequestListener<PageKeyType> = Future<void> Function(
   PageKeyType pageKey,
 );
-
 typedef PagingStatusListener = void Function(
   PagingStatus status,
 );
@@ -29,6 +31,10 @@ class PagingController<PageKeyType, ItemType>
   }) : super(
           PagingState<PageKeyType, ItemType>(nextPageKey: firstPageKey),
         );
+
+  final _pagesBeingFetched = <PageKeyType>{};
+
+  int _currentStateVersion = 0;
 
   /// Creates a controller from an existing [PagingState].
   ///
@@ -59,6 +65,7 @@ class PagingController<PageKeyType, ItemType>
       error: error,
       itemList: newItemList,
       nextPageKey: nextPageKey,
+      version: _currentStateVersion,
     );
   }
 
@@ -70,6 +77,7 @@ class PagingController<PageKeyType, ItemType>
       error: newError,
       itemList: itemList,
       nextPageKey: nextPageKey,
+      version: _currentStateVersion,
     );
   }
 
@@ -84,6 +92,7 @@ class PagingController<PageKeyType, ItemType>
       error: error,
       itemList: itemList,
       nextPageKey: newNextPageKey,
+      version: _currentStateVersion,
     );
   }
 
@@ -93,7 +102,6 @@ class PagingController<PageKeyType, ItemType>
     if (value.status != newValue.status) {
       notifyStatusListeners(newValue.status);
     }
-
     super.value = newValue;
   }
 
@@ -106,6 +114,7 @@ class PagingController<PageKeyType, ItemType>
       itemList: itemList,
       error: null,
       nextPageKey: nextPageKey,
+      version: _currentStateVersion,
     );
   }
 
@@ -118,12 +127,20 @@ class PagingController<PageKeyType, ItemType>
     error = null;
   }
 
+  void cancelPageRequest() {
+    _pageRequestOperation?.cancel();
+    _pageRequestOperation = null;
+  }
+
   /// Resets [value] to its initial state.
-  void refresh() {
+  void refresh({PageKeyType? key}) {
+    cancelPageRequest();
+    _pagesBeingFetched.clear();
     value = PagingState<PageKeyType, ItemType>(
       nextPageKey: firstPageKey,
       error: null,
       itemList: null,
+      version: ++_currentStateVersion,
     );
   }
 
@@ -195,14 +212,22 @@ class PagingController<PageKeyType, ItemType>
     _pageRequestListeners?.remove(listener);
   }
 
+  CancelableOperation<void>? _pageRequestOperation;
+
   /// Calls all the page request listeners.
   ///
   /// If listeners are added or removed during this function, the modifications
   /// will not change which listeners are called during this iteration.
-  void notifyPageRequestListeners(PageKeyType pageKey) {
+  Future<void> notifyPageRequestListeners(
+    PageKeyType pageKey,
+  ) async {
     assert(_debugAssertNotDisposed());
 
     if (_pageRequestListeners?.isEmpty ?? true) {
+      return;
+    }
+
+    if (_pagesBeingFetched.contains(pageKey)) {
       return;
     }
 
@@ -211,7 +236,9 @@ class PagingController<PageKeyType, ItemType>
 
     for (final listener in localListeners) {
       if (_pageRequestListeners!.contains(listener)) {
-        listener(pageKey);
+        _pagesBeingFetched.add(pageKey);
+        final request = listener(pageKey);
+        _pageRequestOperation = CancelableOperation.fromFuture(request);
       }
     }
   }
@@ -219,8 +246,13 @@ class PagingController<PageKeyType, ItemType>
   @override
   void dispose() {
     assert(_debugAssertNotDisposed());
+    cancelPageRequest();
     _statusListeners = null;
     _pageRequestListeners = null;
     super.dispose();
+  }
+
+  String itemKey(int index) {
+    return itemList?[index]?.toString() ?? index.toString();
   }
 }

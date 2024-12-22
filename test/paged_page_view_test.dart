@@ -101,7 +101,7 @@ void main() {
 }
 
 class MockPageRequestListener extends Mock {
-  void call(int pageKey);
+  Future<void> call(int pageKey);
 }
 
 Future<void> _pumpPagedPageView({
