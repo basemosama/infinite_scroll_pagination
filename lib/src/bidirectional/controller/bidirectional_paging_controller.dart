@@ -41,6 +41,7 @@ class BidirectionalPagingController<PageKeyType, ItemType>
   int currentScrollIndex = 0;
 
   final _pagesBeingFetched = <PageKeyType>{};
+  int _currentStateVersion = 0;
 
   BidirectionalPagingController({
     required this.firstPageKey,
@@ -88,6 +89,7 @@ class BidirectionalPagingController<PageKeyType, ItemType>
       nextPageKey: nextPageKey,
       previousPageKey: previousPageKey,
       direction: direction,
+      version: _currentStateVersion,
     );
   }
 
@@ -101,6 +103,7 @@ class BidirectionalPagingController<PageKeyType, ItemType>
       nextPageKey: nextPageKey,
       previousPageKey: previousPageKey,
       direction: direction,
+      version: _currentStateVersion,
     );
   }
 
@@ -118,6 +121,7 @@ class BidirectionalPagingController<PageKeyType, ItemType>
       itemList: itemList,
       nextPageKey: newNextPageKey,
       direction: direction,
+      version: _currentStateVersion,
     );
   }
 
@@ -134,6 +138,7 @@ class BidirectionalPagingController<PageKeyType, ItemType>
       nextPageKey: nextPageKey,
       previousPageKey: newPreviousPageKey,
       direction: direction,
+      version: _currentStateVersion,
     );
   }
 
@@ -175,6 +180,7 @@ class BidirectionalPagingController<PageKeyType, ItemType>
       direction: previousItems.isEmpty && previousPageKey != null
           ? PageDirection.initial
           : PageDirection.next,
+      version: _currentStateVersion,
     );
   }
 
@@ -201,6 +207,7 @@ class BidirectionalPagingController<PageKeyType, ItemType>
       previousPageKey: previousPageKey,
       nextPageKey: nextPageKey ?? this.nextPageKey,
       direction: PageDirection.previous,
+      version: _currentStateVersion,
     );
   }
 
@@ -236,6 +243,7 @@ class BidirectionalPagingController<PageKeyType, ItemType>
     value = BidirectionalPagingState<PageKeyType, ItemType>(
       nextPageKey: firstPageKey,
       direction: PageDirection.initial,
+      version: ++_currentStateVersion,
     );
   }
 

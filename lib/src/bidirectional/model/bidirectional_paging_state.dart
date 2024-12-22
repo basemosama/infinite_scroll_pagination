@@ -8,6 +8,7 @@ class BidirectionalPagingState<PageKeyType, ItemType> {
     this.itemList,
     this.error,
     required this.direction,
+    this.version = 0,
   });
 
   /// List with all items loaded so far.
@@ -24,6 +25,8 @@ class BidirectionalPagingState<PageKeyType, ItemType> {
 
   /// The current direction of the pagination.
   final PageDirection direction;
+
+  final int version;
 
   /// The current pagination status.
   BidirectionalPagingStatus get status {
@@ -76,6 +79,7 @@ class BidirectionalPagingState<PageKeyType, ItemType> {
       return true;
     }
     return other is BidirectionalPagingState &&
+        other.version == version &&
         other.itemList == itemList &&
         other.error == error &&
         other.nextPageKey == nextPageKey;
@@ -83,6 +87,7 @@ class BidirectionalPagingState<PageKeyType, ItemType> {
 
   @override
   int get hashCode => Object.hash(
+        version.hashCode,
         itemList.hashCode,
         error.hashCode,
         nextPageKey.hashCode,
