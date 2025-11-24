@@ -241,6 +241,7 @@ class PagingController<PageKeyType, ItemType>
         _pageRequestOperation = CancelableOperation.fromFuture(request);
       }
     }
+    await _pageRequestOperation?.valueOrCancellation();
   }
 
   @override
